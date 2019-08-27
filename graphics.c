@@ -46,18 +46,21 @@ void graphics_run(GState *state)
 
 static void update(GState *state)
 {
-    SDL_SetRenderDrawColor(state->renderer, 155, 155, 155, SDL_ALPHA_OPAQUE);
+    SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(state->renderer);
     for (int x = 0; x < WINDOW_W; x++)
     {
         for (int y = 0; y < WINDOW_H; y++)
         {
-            if (mandelbrot_in_set(map_range((double)x, 0, WINDOW_W, LO, HI)
-                                  + map_range((double)y, 0, WINDOW_H, LO, HI) * I))
-            {
-                SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-                SDL_RenderDrawPoint(state->renderer, x, y);
-            }
+            double complex mapped_z = map_range((double)x, 0, WINDOW_W, LO, HI)
+                                      + map_range((double)y, 0, WINDOW_H, LO, HI) * I;
+            int steps = mandelbrot_in_set(mapped_z);
+            if (steps == -1)
+                continue;
+            double brightness = map_range(steps, LO, HI, 0, 20);
+            SDL_SetRenderDrawColor(state->renderer, brightness, brightness,
+                                   brightness, SDL_ALPHA_OPAQUE);
+            SDL_RenderDrawPoint(state->renderer, x, y);
         }
     }
     SDL_RenderPresent(state->renderer);

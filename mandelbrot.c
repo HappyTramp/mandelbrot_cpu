@@ -6,7 +6,7 @@
 #define IN_CHAR '*'
 #define OUT_CHAR ' '
 
-double mandelbrot_in_set(double complex c)
+int mandelbrot_in_set(double complex c)
 {
     int i;
     double complex z = 0;
@@ -14,9 +14,9 @@ double mandelbrot_in_set(double complex c)
     {
         z = cpow(z, 2) + c;
         if (cabs(z) > _INFINITY)
-            return 0;
+            return i;
     }
-    return 1;
+    return -1;
 }
 
 void mandelbrot_print(void)

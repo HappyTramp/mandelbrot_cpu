@@ -13,8 +13,8 @@
 # define AXIS_DIV 46.0
 # define AXIS_STEP ((HI - LO) / AXIS_DIV)
 
-# define MAX_ITERATION 50
-# define _INFINITY 15
+# define MAX_ITERATION 30
+# define _INFINITY 4
 
 
 typedef struct
@@ -31,7 +31,7 @@ typedef struct
 } GConf;
 
 // mandelbrot.c
-double mandelbrot_in_set(double _Complex c);
+int mandelbrot_in_set(double _Complex c);
 void mandelbrot_print(void);
 
 // graphics.c
