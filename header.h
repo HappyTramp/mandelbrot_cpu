@@ -5,6 +5,18 @@
 # include <complex.h>
 # include <SDL2/SDL.h>
 
+# define WINDOW_W 500
+# define WINDOW_H 500
+
+# define LO -1.5
+# define HI 1.5
+# define AXIS_DIV 46.0
+# define AXIS_STEP ((HI - LO) / AXIS_DIV)
+
+# define MAX_ITERATION 50
+# define _INFINITY 15
+
+
 typedef struct
 {
     SDL_Window *window;
@@ -26,5 +38,8 @@ void mandelbrot_print(void);
 GState *graphics_init(GConf *conf);
 void graphics_quit(GState *state);
 void graphics_run(GState *state);
+
+// helper.c
+double map_range(double x, double src_lo, double src_hi, double dest_lo, double dest_hi);
 
 #endif
