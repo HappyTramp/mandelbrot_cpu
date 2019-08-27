@@ -1,7 +1,7 @@
 NAME = mandel
 CC = gcc
 CCFLAGS = -Wall -Wextra
-LDFLAGS = -lm # $(shell sdl2-config --libs --cflags)
+LDFLAGS = -lm $(shell sdl2-config --libs --cflags)
 
 HEADER = header.h
 SRC = main.c graphics.c mandelbrot.c
