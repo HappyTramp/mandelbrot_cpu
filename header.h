@@ -10,12 +10,22 @@
 # define REAL_RANGE 4.0
 # define IMAG_RANGE 4.0
 
-# define MAX_ITERATION 35
+# define MAX_ITERATION 50
 # define ESCAPE_VALUE 2
 
-/* typedef long double LDouble; */
+typedef unsigned char Byte;
+typedef int ColorHexcode;
 
-typedef int Color;
+typedef union
+{
+    ColorHexcode hexcode;
+    struct
+    {
+        Byte b;
+        Byte g;
+        Byte r;
+    } rgb;
+} Color;
 
 typedef struct
 {
@@ -34,6 +44,7 @@ typedef struct
     double real_range;
     double imag_range;
     Color *palette;
+    Color in_set_color;
 } GState;
 
 // mandelbrot.c

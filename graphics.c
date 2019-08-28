@@ -16,18 +16,11 @@
 #define IMAG_LO(state) (state->center.y - state->imag_range / 2)
 #define IMAG_HI(state) (state->center.y + state->imag_range / 2)
 
-#define RED_MASK 0xFF0000
-#define GREEN_MASK 0x00FF00
-#define BLUE_MASK 0x0000FF
-#define RED(c) ((c & RED_MASK) >> (8 * 2))
-#define GREEN(c) ((c & GREEN_MASK) >> 8)
-#define BLUE(c) (c & BLUE_MASK)
-#define MERGE_RGB(r, g, b) ((r) << (8 * 2) | (g) << 8 | (b))
+#define IN_SET_COLOR 0x000000
 #define PALETTE_START 0x000022
 #define PALETTE_END 0xd62f2f
-#define SET_DRAW_COLOR_RGB(renderer, c) ( \
-        SDL_SetRenderDrawColor(renderer, RED(c), GREEN(c), BLUE(c), SDL_ALPHA_OPAQUE))
-#define IN_SET_COLOR 0x000000
+#define SET_DRAW_COLOR(renderer, c) ( \
+        SDL_SetRenderDrawColor(renderer, c.rgb.r, c.rgb.g, c.rgb.b, SDL_ALPHA_OPAQUE));
 
 static void update(GState *state);
 static void event_handler(GState *state);
@@ -38,6 +31,8 @@ static void error_exit(const char *msg);
 
 GState *graphics_init(void)
 {
+    Color start, end;
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         error_exit("unable to init SDL");
     GState *state = (GState*)malloc(sizeof(GState));
@@ -50,8 +45,12 @@ GState *graphics_init(void)
     state->renderer = SDL_CreateRenderer(state->window, -1, 0);
     if (state->renderer == NULL)
         error_exit_state(state, "unable to create renderer");
-    if ((state->palette = create_palette(PALETTE_START, PALETTE_END)) == NULL)
+    start.hexcode = PALETTE_START;
+    end.hexcode = PALETTE_END;
+    state->palette = create_palette(start, end);
+    if (state->palette == NULL)
         error_exit_state(state, "unable to create color palette");
+    state->in_set_color.hexcode = IN_SET_COLOR;
     state->running = true;
     state->window_w = WINDOW_W;
     state->window_h = WINDOW_H;
@@ -81,7 +80,8 @@ void graphics_run(GState *state)
 static void update(GState *state)
 {
     double a, b;
-    SET_DRAW_COLOR_RGB(state->renderer, IN_SET_COLOR);
+    Color color;
+    SET_DRAW_COLOR(state->renderer, state->in_set_color);
     SDL_RenderClear(state->renderer);
     for (int x = 0; x < state->window_w; x++)
     {
@@ -89,11 +89,11 @@ static void update(GState *state)
         {
             a = map_range((double)x, 0, state->window_w, REAL_LO(state), REAL_HI(state));
             b = map_range((double)y, 0, state->window_h, IMAG_LO(state), IMAG_HI(state));
-            double complex mapped_z = a + b * I;
-            int steps = mandelbrot_in_set(mapped_z);
+            int steps = mandelbrot_in_set(a + b * I);
             if (steps == -1)
                 continue;
-            SET_DRAW_COLOR_RGB(state->renderer, state->palette[steps]);
+            color =  state->palette[steps];
+            SET_DRAW_COLOR(state->renderer, color);
             SDL_RenderDrawPoint(state->renderer, x, y);
         }
     }
@@ -148,17 +148,19 @@ static void event_handler(GState *state)
 
 static Color *create_palette(Color start, Color end)
 {
-    Color red_step = abs(RED(end) - RED(start)) / MAX_ITERATION;
-    Color green_step = abs(GREEN(end) - GREEN(start)) / MAX_ITERATION;
-    Color blue_step = abs(BLUE(end) - BLUE(start)) / MAX_ITERATION;
+    int red_step = abs(end.rgb.r - start.rgb.r) / MAX_ITERATION;
+    int green_step = abs(end.rgb.g - start.rgb.g) / MAX_ITERATION;
+    int blue_step = abs(end.rgb.b - start.rgb.b) / MAX_ITERATION;
 
     Color *palette = (Color*)malloc(sizeof(Color) * MAX_ITERATION);
     if (palette == NULL)
         return NULL;
     for (int i = 0; i < MAX_ITERATION; i++)
-        palette[i] = MERGE_RGB(i * red_step + RED(start),
-                               i * green_step + GREEN(start),
-                               i * blue_step + BLUE(start));
+    {
+        palette[i].rgb.r = i * red_step + start.rgb.r;
+        palette[i].rgb.g = i * green_step + start.rgb.g;
+        palette[i].rgb.b = i * blue_step + start.rgb.b;
+    }
     return palette;
 }
 
@@ -166,6 +168,7 @@ static void destroy_state(GState *state)
 {
     if (state == NULL)
         return;
+    free(state->palette);
     SDL_DestroyRenderer(state->renderer);
     SDL_DestroyWindow(state->window);
     free(state);
