@@ -6,12 +6,14 @@
 #define WINDOW_TITLE "Mandelbrot"
 #define WINDOW_X 20
 #define WINDOW_Y 20
-#define WINDOW_W 500
-#define WINDOW_H 500
+#define WINDOW_W 300
+#define WINDOW_H 300
 #define REFRESH_RATE 3
+#define MOVE_SIZE 0.1
+#define ZOOM_SIZE 0.1
 
 #define BRIGHTNESS_LO 0
-#define BRIGHTNESS_HI 20
+#define BRIGHTNESS_HI 10
 
 static void update(GState *state);
 static void event_handler(GState *state);
@@ -94,6 +96,38 @@ static void event_handler(GState *state)
             case SDL_QUIT:
                 state->running = false;
                 break;
+            case SDL_KEYUP:
+                switch (e.key.keysym.sym)
+                {
+                    case SDLK_UP:
+                        state->imag_lo -= MOVE_SIZE;
+                        state->imag_hi -= MOVE_SIZE;
+                        break;
+                    case SDLK_DOWN:
+                        state->imag_lo += MOVE_SIZE;
+                        state->imag_hi += MOVE_SIZE;
+                        break;
+                    case SDLK_LEFT:
+                        state->real_lo -= MOVE_SIZE;
+                        state->real_hi -= MOVE_SIZE;
+                        break;
+                    case SDLK_RIGHT:
+                        state->real_lo += MOVE_SIZE;
+                        state->real_hi += MOVE_SIZE;
+                        break;
+                    case SDLK_p:
+                        state->real_lo += ZOOM_SIZE;
+                        state->real_hi -= ZOOM_SIZE;
+                        state->imag_lo += ZOOM_SIZE;
+                        state->imag_hi -= ZOOM_SIZE;
+                        break;
+                    case SDLK_m:
+                        state->real_lo -= ZOOM_SIZE;
+                        state->real_hi += ZOOM_SIZE;
+                        state->imag_lo -= ZOOM_SIZE;
+                        state->imag_hi += ZOOM_SIZE;
+                        break;
+                }
         }
     }
 }
