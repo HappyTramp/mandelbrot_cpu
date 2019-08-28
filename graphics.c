@@ -8,7 +8,7 @@
 #define WINDOW_Y 20
 #define WINDOW_W 300
 #define WINDOW_H 300
-#define REFRESH_RATE 1
+#define REFRESH_RATE 2
 #define MOVE_RATIO 10
 #define ZOOM_RATIO 1.1
 #define REAL_LO(state) (state->center.x - state->real_range / 2)
@@ -25,6 +25,12 @@
 static void update(GState *state);
 static void event_handler(GState *state);
 static Color *create_palette(Color start, Color end);
+/* static void move_center(GState *state, int motion_x, int motion_y); */
+static void recenter(GState *state, int x, int y);
+static void recenter_x(GState *state, int x);
+static void recenter_y(GState *state, int y);
+static void zoom_in(GState *state, double ratio);
+static void zoom_out(GState *state, double ratio);
 static void destroy_state(GState *state);
 static void error_exit_state(GState *state, const char *msg);
 static void error_exit(const char *msg);
@@ -50,7 +56,6 @@ GState *graphics_init(void)
     state->palette = create_palette(start, end);
     if (state->palette == NULL)
         error_exit_state(state, "unable to create color palette");
-    state->in_set_color.hexcode = IN_SET_COLOR;
     state->running = true;
     state->window_w = WINDOW_W;
     state->window_h = WINDOW_H;
@@ -58,6 +63,8 @@ GState *graphics_init(void)
     state->imag_range = IMAG_RANGE;
     state->center.x = CENTER_X;
     state->center.y = CENTER_Y;
+    state->in_set_color.hexcode = IN_SET_COLOR;
+    state->moving = false;
     return state;
 }
 
@@ -131,17 +138,44 @@ static void event_handler(GState *state)
                         break;
                     case SDLK_PLUS:
                     case SDLK_p:
-                        state->real_range /= ZOOM_RATIO;
-                        state->imag_range /= ZOOM_RATIO;
+                        zoom_in(state, ZOOM_RATIO);
                         break;
                     case SDLK_MINUS:
                     case SDLK_m:
-                        state->real_range *= ZOOM_RATIO;
-                        state->imag_range *= ZOOM_RATIO;
+                        zoom_out(state, ZOOM_RATIO);
                         break;
                     case SDLK_q:
                         state->running = false;
                 }
+                break;
+            case SDL_MOUSEWHEEL:
+                if (e.wheel.y == -1)
+                    zoom_in(state, ZOOM_RATIO);
+                else if (e.wheel.y == 1)
+                    zoom_out(state, ZOOM_RATIO);
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                    printf("> %d, %d\n", e.button.x, e.button.y);
+                if (e.button.button == SDL_BUTTON_RIGHT)
+                    recenter(state, e.button.x, e.button.y);
+            // TODO
+            /* case SDL_MOUSEBUTTONUP: */
+            /*     if (e.button.button == SDL_BUTTON_LEFT) */
+            /*     { */
+            /*         if (!state->moving && e.button.state == SDL_PRESSED) */
+            /*             state->moving = true; */
+            /*         else if (state->moving && e.button.state == SDL_RELEASED) */
+            /*             state->moving = false; */
+            /* printf("%d %d\n", state->moving, e.button.state); */
+            /*     } */
+            /*     break; */
+            /* case SDL_MOUSEMOTION: */
+            /*     if (state->moving) */
+            /*     { */
+            /*         printf("%d, %d\n", e.motion.x, e.motion.y); */
+            /*         move_center(state, e.motion.xrel, e.motion.yrel); */
+            /*         printf("%f, %f\n", state->center.x, state->center.y); */
+            /*     } */
         }
     }
 }
@@ -162,6 +196,49 @@ static Color *create_palette(Color start, Color end)
         palette[i].rgb.b = i * blue_step + start.rgb.b;
     }
     return palette;
+}
+
+// TODO
+/* static void move_center(GState *state, int motion_x, int motion_y) */
+/* { */
+/*     printf("%d, %d\n", motion_x, motion_y); */
+/*     if (motion_x != 0) */
+/*     state->center.x -= map_range(150 - motion_x, 0, state->window_w, */
+/*                                  REAL_LO(state), REAL_HI(state)); */
+/*     if (motion_y != 0) */
+/*     state->center.y -=  map_range(150 - motion_y, 0, state->window_h, */
+/*                                   IMAG_LO(state), IMAG_HI(state)); */
+/*     printf(">> %f, %f\n", state->center.x, state->center.y); */
+/* } */
+
+static void recenter(GState *state, int x, int y)
+{
+    recenter_x(state, x);
+    recenter_y(state, y);
+}
+
+static void recenter_x(GState *state, int x)
+{
+    state->center.x = map_range(x, 0, state->window_w,
+                                REAL_LO(state), REAL_HI(state));
+}
+
+static void recenter_y(GState *state, int y)
+{
+    state->center.y = map_range(y, 0, state->window_w,
+                                IMAG_LO(state), IMAG_HI(state));
+}
+
+static void zoom_in(GState *state, double ratio)
+{
+    state->real_range /= ratio;
+    state->imag_range /= ratio;
+}
+
+static void zoom_out(GState *state, double ratio)
+{
+    state->real_range *= ratio;
+    state->imag_range *= ratio;
 }
 
 static void destroy_state(GState *state)

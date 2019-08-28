@@ -10,7 +10,7 @@
 # define REAL_RANGE 4.0
 # define IMAG_RANGE 4.0
 
-# define MAX_ITERATION 50
+# define MAX_ITERATION 20
 # define ESCAPE_VALUE 2
 
 typedef unsigned char Byte;
@@ -45,6 +45,7 @@ typedef struct
     double imag_range;
     Color *palette;
     Color in_set_color;
+    bool moving;
 } GState;
 
 // mandelbrot.c
