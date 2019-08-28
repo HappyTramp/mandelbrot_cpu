@@ -17,7 +17,7 @@ int mandelbrot_in_set(double complex c)
     for (i = 0; i < MAX_ITERATION; i++)
     {
         z = cpow(z, 2) + c;
-        if (cabs(z) > _INFINITY)
+        if (cabs(z) > ESCAPE_VALUE)
             return i;
     }
     return -1;
@@ -29,7 +29,7 @@ void mandelbrot_print(void)
     {
         for (double r = REAL_LO; r < REAL_HI; r += REAL_AXIS_STEP)
         {
-            if (mandelbrot_in_set(r + i * I))
+            if (mandelbrot_in_set(r + i * I) == -1)
                 putchar(IN_CHAR);
             else
                 putchar(OUT_CHAR);

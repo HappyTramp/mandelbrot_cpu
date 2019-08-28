@@ -10,8 +10,12 @@
 # define IMAG_LO -2.0
 # define IMAG_HI 2.0
 
-# define MAX_ITERATION 30
-# define _INFINITY 4
+# define MAX_ITERATION 35
+# define ESCAPE_VALUE 2
+
+/* typedef long double LDouble; */
+
+typedef int Color;
 
 typedef struct
 {
@@ -24,6 +28,7 @@ typedef struct
     double real_hi;
     double imag_lo;
     double imag_hi;
+    Color *palette;
 } GState;
 
 // mandelbrot.c

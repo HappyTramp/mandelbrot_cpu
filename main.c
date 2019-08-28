@@ -1,10 +1,25 @@
+#include <getopt.h>
 #include "header.h"
 
-int main(void)
+int main(int argc, char **argv)
 {
-    /* mandelbrot_print(); */
+    int opt;
+
+    while ((opt = getopt(argc, argv, "c")) != -1)
+    {
+        switch (opt)
+        {
+            case 'c':
+                mandelbrot_print();
+                exit(EXIT_SUCCESS);
+                break;
+            default:
+                fprintf(stderr, "Usage %s ...", argv[0]);
+        }
+
+    }
     GState *gstate = graphics_init();
     graphics_run(gstate);
     graphics_quit(gstate);
-    return 0;
+    return EXIT_SUCCESS;
 }
