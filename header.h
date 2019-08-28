@@ -5,37 +5,33 @@
 # include <complex.h>
 # include <SDL2/SDL.h>
 
-# define WINDOW_W 500
-# define WINDOW_H 500
-
-# define LO -1.5
-# define HI 1.5
-# define AXIS_DIV 46.0
-# define AXIS_STEP ((HI - LO) / AXIS_DIV)
+# define REAL_LO -2.0
+# define REAL_HI 2.0
+# define IMAG_LO -2.0
+# define IMAG_HI 2.0
 
 # define MAX_ITERATION 30
 # define _INFINITY 4
-
 
 typedef struct
 {
     SDL_Window *window;
     SDL_Renderer *renderer;
     bool running;
+    int window_w;
+    int window_h;
+    double real_lo;
+    double real_hi;
+    double imag_lo;
+    double imag_hi;
 } GState;
-
-typedef struct
-{
-    int window_width;
-    int window_height;
-} GConf;
 
 // mandelbrot.c
 int mandelbrot_in_set(double _Complex c);
 void mandelbrot_print(void);
 
 // graphics.c
-GState *graphics_init(GConf *conf);
+GState *graphics_init(void);
 void graphics_quit(GState *state);
 void graphics_run(GState *state);
 

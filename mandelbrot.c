@@ -3,6 +3,10 @@
 #include <complex.h>
 #include "header.h"
 
+#define AXIS_DIV 46.0
+#define REAL_AXIS_STEP ((REAL_HI - REAL_LO) / AXIS_DIV)
+#define IMAG_AXIS_STEP ((IMAG_HI - IMAG_LO) / AXIS_DIV)
+
 #define IN_CHAR '*'
 #define OUT_CHAR ' '
 
@@ -21,9 +25,9 @@ int mandelbrot_in_set(double complex c)
 
 void mandelbrot_print(void)
 {
-    for (double i = LO; i < HI; i += AXIS_STEP)
+    for (double i = IMAG_LO; i < IMAG_HI; i += IMAG_AXIS_STEP)
     {
-        for (double r = LO; r < HI; r += AXIS_STEP)
+        for (double r = REAL_LO; r < REAL_HI; r += REAL_AXIS_STEP)
         {
             if (mandelbrot_in_set(r + i * I))
                 putchar(IN_CHAR);

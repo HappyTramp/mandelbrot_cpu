@@ -1,8 +1,17 @@
+#include <stdbool.h>
+#include <complex.h>
+#include <SDL2/SDL.h>
 #include "header.h"
 
 #define WINDOW_TITLE "Mandelbrot"
 #define WINDOW_X 20
 #define WINDOW_Y 20
+#define WINDOW_W 500
+#define WINDOW_H 500
+#define REFRESH_RATE 3
+
+#define BRIGHTNESS_LO 0
+#define BRIGHTNESS_HI 20
 
 static void update(GState *state);
 static void event_handler(GState *state);
@@ -10,7 +19,7 @@ static void destroy_state(GState *state);
 static void error_exit_state(GState *state, const char *msg);
 static void error_exit(const char *msg);
 
-GState *graphics_init(GConf *conf)
+GState *graphics_init(void)
 {
     GState *state = (GState*)malloc(sizeof(GState));
     if (state == NULL)
@@ -25,6 +34,12 @@ GState *graphics_init(GConf *conf)
     if (state->renderer == NULL)
         error_exit_state(state, "unable to create renderer");
     state->running = true;
+    state->window_w = WINDOW_W;
+    state->window_h = WINDOW_H;
+    state->real_lo = REAL_LO;
+    state->real_hi = REAL_HI;
+    state->imag_lo = IMAG_LO;
+    state->imag_hi = IMAG_HI;
     return state;
 }
 
@@ -40,24 +55,27 @@ void graphics_run(GState *state)
     {
         event_handler(state);
         update(state);
-        SDL_Delay(3);
+        SDL_Delay(REFRESH_RATE);
     }
 }
 
 static void update(GState *state)
 {
+    double a, b, brightness;
     SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(state->renderer);
-    for (int x = 0; x < WINDOW_W; x++)
+    for (int x = 0; x < state->window_w; x++)
     {
-        for (int y = 0; y < WINDOW_H; y++)
+        for (int y = 0; y < state->window_h; y++)
         {
-            double complex mapped_z = map_range((double)x, 0, WINDOW_W, LO, HI)
-                                      + map_range((double)y, 0, WINDOW_H, LO, HI) * I;
+            a = map_range((double)x, 0, state->window_w, state->real_lo, state->real_hi);
+            b = map_range((double)y, 0, state->window_h, state->imag_lo, state->imag_hi);
+            double complex mapped_z = a + b * I;
             int steps = mandelbrot_in_set(mapped_z);
             if (steps == -1)
                 continue;
-            double brightness = map_range(steps, LO, HI, 0, 20);
+            brightness = map_range(steps, state->real_lo, state->real_hi,
+                                   BRIGHTNESS_LO, BRIGHTNESS_HI);
             SDL_SetRenderDrawColor(state->renderer, brightness, brightness,
                                    brightness, SDL_ALPHA_OPAQUE);
             SDL_RenderDrawPoint(state->renderer, x, y);
