@@ -6,11 +6,15 @@
 #define WINDOW_TITLE "Mandelbrot"
 #define WINDOW_X 20
 #define WINDOW_Y 20
-#define WINDOW_W 500
-#define WINDOW_H 500
+#define WINDOW_W 300
+#define WINDOW_H 300
 #define REFRESH_RATE 1
-#define MOVE_SIZE 0.1
-#define ZOOM_SIZE 0.1
+#define MOVE_RATIO 10
+#define ZOOM_RATIO 1.1
+#define REAL_LO(state) (state->center.x - state->real_range / 2)
+#define REAL_HI(state) (state->center.x + state->real_range / 2)
+#define IMAG_LO(state) (state->center.y - state->imag_range / 2)
+#define IMAG_HI(state) (state->center.y + state->imag_range / 2)
 
 #define RED_MASK 0xFF0000
 #define GREEN_MASK 0x00FF00
@@ -19,8 +23,8 @@
 #define GREEN(c) ((c & GREEN_MASK) >> 8)
 #define BLUE(c) (c & BLUE_MASK)
 #define MERGE_RGB(r, g, b) ((r) << (8 * 2) | (g) << 8 | (b))
-#define PALETTE_START 0x334455
-#define PALETTE_END 0xFFFFFF
+#define PALETTE_START 0x000022
+#define PALETTE_END 0xd62f2f
 #define SET_DRAW_COLOR_RGB(renderer, c) ( \
         SDL_SetRenderDrawColor(renderer, RED(c), GREEN(c), BLUE(c), SDL_ALPHA_OPAQUE))
 #define IN_SET_COLOR 0x000000
@@ -51,10 +55,10 @@ GState *graphics_init(void)
     state->running = true;
     state->window_w = WINDOW_W;
     state->window_h = WINDOW_H;
-    state->real_lo = REAL_LO;
-    state->real_hi = REAL_HI;
-    state->imag_lo = IMAG_LO;
-    state->imag_hi = IMAG_HI;
+    state->real_range = REAL_RANGE;
+    state->imag_range = IMAG_RANGE;
+    state->center.x = CENTER_X;
+    state->center.y = CENTER_Y;
     return state;
 }
 
@@ -83,8 +87,8 @@ static void update(GState *state)
     {
         for (int y = 0; y < state->window_h; y++)
         {
-            a = map_range((double)x, 0, state->window_w, state->real_lo, state->real_hi);
-            b = map_range((double)y, 0, state->window_h, state->imag_lo, state->imag_hi);
+            a = map_range((double)x, 0, state->window_w, REAL_LO(state), REAL_HI(state));
+            b = map_range((double)y, 0, state->window_h, IMAG_LO(state), IMAG_HI(state));
             double complex mapped_z = a + b * I;
             int steps = mandelbrot_in_set(mapped_z);
             if (steps == -1)
@@ -111,41 +115,32 @@ static void event_handler(GState *state)
                 {
                     case SDLK_UP:
                     case SDLK_k:
-                        state->imag_lo -= MOVE_SIZE;
-                        state->imag_hi -= MOVE_SIZE;
+                        state->center.y -= state->imag_range / MOVE_RATIO;
                         break;
                     case SDLK_DOWN:
                     case SDLK_j:
-                        state->imag_lo += MOVE_SIZE;
-                        state->imag_hi += MOVE_SIZE;
+                        state->center.y += state->imag_range / MOVE_RATIO;
                         break;
                     case SDLK_LEFT:
                     case SDLK_h:
-                        state->real_lo -= MOVE_SIZE;
-                        state->real_hi -= MOVE_SIZE;
+                        state->center.x -= state->real_range / MOVE_RATIO;
                         break;
                     case SDLK_RIGHT:
                     case SDLK_l:
-                        state->real_lo += MOVE_SIZE;
-                        state->real_hi += MOVE_SIZE;
+                        state->center.x += state->real_range / MOVE_RATIO;
                         break;
                     case SDLK_PLUS:
                     case SDLK_p:
-                        state->real_lo += ZOOM_SIZE;
-                        state->real_hi -= ZOOM_SIZE;
-                        state->imag_lo += ZOOM_SIZE;
-                        state->imag_hi -= ZOOM_SIZE;
+                        state->real_range /= ZOOM_RATIO;
+                        state->imag_range /= ZOOM_RATIO;
                         break;
                     case SDLK_MINUS:
                     case SDLK_m:
-                        state->real_lo -= ZOOM_SIZE;
-                        state->real_hi += ZOOM_SIZE;
-                        state->imag_lo -= ZOOM_SIZE;
-                        state->imag_hi += ZOOM_SIZE;
+                        state->real_range *= ZOOM_RATIO;
+                        state->imag_range *= ZOOM_RATIO;
                         break;
                     case SDLK_q:
                         state->running = false;
-                        break;
                 }
         }
     }

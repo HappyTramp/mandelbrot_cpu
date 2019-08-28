@@ -12,10 +12,10 @@ RM = rm -f
 .PHONY: all
 all: $(NAME)
 
-$(NAME): $(OBJ) $(HEADER)
+$(NAME): $(OBJ)
 	$(CC) $(LDFLAGS) $(CCFLAGS) -o $@ $(OBJ)
 
-%.o: %.c
+%.o: %.c $(HEADER)
 	$(CC) $(LDFLAGS) $(CCFLAGS) -c -o $@ $<
 
 .PHONY: debug

@@ -5,10 +5,10 @@
 # include <complex.h>
 # include <SDL2/SDL.h>
 
-# define REAL_LO -2.0
-# define REAL_HI 2.0
-# define IMAG_LO -2.0
-# define IMAG_HI 2.0
+# define CENTER_X 0.0
+# define CENTER_Y 0.0
+# define REAL_RANGE 4.0
+# define IMAG_RANGE 4.0
 
 # define MAX_ITERATION 35
 # define ESCAPE_VALUE 2
@@ -19,15 +19,20 @@ typedef int Color;
 
 typedef struct
 {
+    double x;
+    double y;
+} Point;
+
+typedef struct
+{
     SDL_Window *window;
     SDL_Renderer *renderer;
     bool running;
     int window_w;
     int window_h;
-    double real_lo;
-    double real_hi;
-    double imag_lo;
-    double imag_hi;
+    Point center;
+    double real_range;
+    double imag_range;
     Color *palette;
 } GState;
 
