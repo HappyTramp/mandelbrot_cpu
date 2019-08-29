@@ -14,17 +14,44 @@
 #define IN_CHAR '*'
 #define OUT_CHAR ' '
 
-int mandelbrot_in_set(double complex c)
+int mandelbrot_in_set(double ca, double cb)
 {
-    int i;
-    double complex z = 0;
-    for (i = 0; i < MAX_ITERATION; i++)
+    double zr = ca;
+    double zi = cb;
+    double zr_square;
+    double zi_square;
+    for (int n = 0; n < MAX_ITERATION; n++)
     {
-        z = cpow(z, 2) + c;
-        if (cabs(z) > ESCAPE_VALUE)
-            return i;
+        zi_square = zi * zi;
+        zr_square = zr * zr;
+        if (zr_square + zi_square > ESCAPE_RADIUS_SQUARED)
+            return n;
+            /* return n + 5 - clog(ESCAPE_RADIUS) / log(2); */
+        zi = 2 * zr * zi;
+        zr = zr_square - zi_square;
+        zi += cb;
+        zr += ca;
     }
     return -1;
+}
+
+int *mandelbrot_array(Point center, double real_range, double imag_range,
+                      double real_len, double imag_len)
+{
+    double i = center.y - imag_range / 2;
+    double r = center.x - real_range / 2;
+    int *array = malloc(sizeof(int) * imag_len * real_len);
+
+    for (int array_i = 0; array_i < imag_len;  array_i++)
+    {
+        for (int array_j = 0; array_j < real_len; array_j++)
+        {
+            array[array_i * (int)imag_len + array_j] = mandelbrot_in_set(r, i);
+            r += real_range / real_len;
+        }
+        i += imag_range / imag_len;
+    }
+    return array;
 }
 
 void mandelbrot_print(void)
@@ -33,7 +60,7 @@ void mandelbrot_print(void)
     {
         for (double r = PRINT_REAL_LO; r < PRINT_REAL_HI; r += REAL_AXIS_STEP)
         {
-            if (mandelbrot_in_set(r + i * I) == -1)
+            if (mandelbrot_in_set(r, i) == -1)
                 putchar(IN_CHAR);
             else
                 putchar(OUT_CHAR);
@@ -42,10 +69,3 @@ void mandelbrot_print(void)
         putchar('\n');
     }
 }
-
-/*
-#define SQUARE(x) (pow((x), 2))
-#define SQUARE_CML(z) (SQUARE(creal(z)) - SQUARE(cimag(z)) + 2 * creal(z) * cimag(z) * I)
-
-double magnitude(double complex z) { return sqrt(SQUARE(creal(z)) + SQUARE(cimag(z))); }
-*/

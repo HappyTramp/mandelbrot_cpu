@@ -16,7 +16,7 @@
 #define IMAG_LO(state) (state->center.y - state->imag_range / 2)
 #define IMAG_HI(state) (state->center.y + state->imag_range / 2)
 
-#define IN_SET_COLOR 0x000000
+#define IN_SET_COLOR 0x050505
 #define PALETTE_START 0x000022
 #define PALETTE_END 0xd62f2f
 #define SET_DRAW_COLOR(renderer, c) ( \
@@ -24,7 +24,7 @@
 
 static void update(GState *state);
 static void event_handler(GState *state);
-static Color *create_palette(Color start, Color end);
+/* static Color *create_palette(Color start, Color end); */
 /* static void move_center(GState *state, int motion_x, int motion_y); */
 static void recenter(GState *state, int x, int y);
 static void recenter_x(GState *state, int x);
@@ -96,10 +96,13 @@ static void update(GState *state)
         {
             a = map_range((double)x, 0, state->window_w, REAL_LO(state), REAL_HI(state));
             b = map_range((double)y, 0, state->window_h, IMAG_LO(state), IMAG_HI(state));
-            int steps = mandelbrot_in_set(a + b * I);
-            if (steps == -1)
+            int frac_steps = mandelbrot_in_set(a, b);
+            if (frac_steps == -1)
                 continue;
-            color =  state->palette[steps];
+            color =  state->palette[frac_steps];
+            /* color.rgb.r = 100 * frac_steps; */
+            /* color.rgb.g = 100 * frac_steps; */
+            /* color.rgb.b = 100 * frac_steps; */
             SET_DRAW_COLOR(state->renderer, color);
             SDL_RenderDrawPoint(state->renderer, x, y);
         }
@@ -180,7 +183,7 @@ static void event_handler(GState *state)
     }
 }
 
-static Color *create_palette(Color start, Color end)
+ Color *create_palette(Color start, Color end)
 {
     int red_step = abs(end.rgb.r - start.rgb.r) / MAX_ITERATION;
     int green_step = abs(end.rgb.g - start.rgb.g) / MAX_ITERATION;
