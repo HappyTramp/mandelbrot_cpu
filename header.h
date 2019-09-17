@@ -2,15 +2,9 @@
 # define HEADER_H
 
 # include <stdbool.h>
-# include <complex.h>
 # include <SDL2/SDL.h>
 
-# define CENTER_X 0.0
-# define CENTER_Y 0.0
-# define REAL_RANGE 4.0
-# define IMAG_RANGE 4.0
-
-# define MAX_ITERATION 35
+# define MAX_ITERATION 200
 # define ESCAPE_RADIUS 2
 # define ESCAPE_RADIUS_SQUARED (ESCAPE_RADIUS * ESCAPE_RADIUS)
 
@@ -49,6 +43,16 @@ typedef struct
     bool moving;
 } GState;
 
+typedef struct
+{
+    int window_w;
+    int window_h;
+    double real_range;
+    double imag_range;
+    double center_x;
+    double center_y;
+} Config;
+
 // mandelbrot.c
 int mandelbrot_in_set(double a, double b);
 void mandelbrot_print(void);
@@ -56,7 +60,7 @@ int *mandelbrot_array(Point center, double real_range, double imag_range,
                       double real_len, double imag_len);
 
 // graphics.c
-GState *graphics_init(void);
+GState *graphics_init(Config *config);
 void graphics_quit(GState *state);
 void graphics_run(GState *state);
 Color *create_palette(Color start, Color end);

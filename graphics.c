@@ -1,13 +1,10 @@
 #include <stdbool.h>
-#include <complex.h>
 #include <SDL2/SDL.h>
 #include "header.h"
 
 #define WINDOW_TITLE "Mandelbrot"
 #define WINDOW_X 20
 #define WINDOW_Y 20
-#define WINDOW_W 300
-#define WINDOW_H 300
 #define REFRESH_RATE 2
 #define MOVE_RATIO 10
 #define ZOOM_RATIO 1.1
@@ -35,7 +32,7 @@ static void destroy_state(GState *state);
 static void error_exit_state(GState *state, const char *msg);
 static void error_exit(const char *msg);
 
-GState *graphics_init(void)
+GState *graphics_init(Config *config)
 {
     Color start, end;
 
@@ -45,7 +42,7 @@ GState *graphics_init(void)
     if (state == NULL)
         error_exit("state allocation failed");
     state->window = SDL_CreateWindow(WINDOW_TITLE, WINDOW_X, WINDOW_Y,
-                                     WINDOW_W, WINDOW_H, 0);
+                                     config->window_w, config->window_h, 0);
     if (state->window == NULL)
         error_exit_state(state, "unable to create window");
     state->renderer = SDL_CreateRenderer(state->window, -1, 0);
@@ -57,12 +54,12 @@ GState *graphics_init(void)
     if (state->palette == NULL)
         error_exit_state(state, "unable to create color palette");
     state->running = true;
-    state->window_w = WINDOW_W;
-    state->window_h = WINDOW_H;
-    state->real_range = REAL_RANGE;
-    state->imag_range = IMAG_RANGE;
-    state->center.x = CENTER_X;
-    state->center.y = CENTER_Y;
+    state->window_w = config->window_w;
+    state->window_h = config->window_h;
+    state->real_range = config->real_range;
+    state->imag_range = config->imag_range;
+    state->center.x = config->center_x;
+    state->center.y = config->center_y;
     state->in_set_color.hexcode = IN_SET_COLOR;
     state->moving = false;
     return state;

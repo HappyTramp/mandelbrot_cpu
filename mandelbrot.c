@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <math.h>
-#include <complex.h>
 #include "header.h"
 
 #define PRINT_REAL_LO -2.0
@@ -35,23 +34,40 @@ int mandelbrot_in_set(double ca, double cb)
     return -1;
 }
 
-int *mandelbrot_array(Point center, double real_range, double imag_range,
-                      double real_len, double imag_len)
+ColorHexcode mandelbrot_in_set_color(Color *spectrum, double a, double b)
+{
+    int steps = mandelbrot_in_set(a, b);
+    int brightness = (255 / MAX_ITERATION) * steps;
+    Color color;
+    color.rgb.r = brightness;
+    color.rgb.g = brightness;
+    color.rgb.b = brightness;
+    return color.hexcode;
+}
+
+uint8_t *mandelbrot_create_bits(int width, int height)
+{
+    uint8_t *bits = (uint8_t*)malloc(3 * width * height);
+    if (bits == NULL)
+        return NULL;
+    return bits;
+}
+
+void mandelbrot_set_bits(uint8_t *bits, Color *spectrum, Point center, double real_range,
+                         double imag_range, int width, int height)
 {
     double i = center.y - imag_range / 2;
     double r = center.x - real_range / 2;
-    int *array = malloc(sizeof(int) * imag_len * real_len);
 
-    for (int array_i = 0; array_i < imag_len;  array_i++)
+    for (int array_i = 0; array_i < height;  array_i++)
     {
-        for (int array_j = 0; array_j < real_len; array_j++)
+        for (int array_j = 0; array_j < width; array_j++)
         {
-            array[array_i * (int)imag_len + array_j] = mandelbrot_in_set(r, i);
-            r += real_range / real_len;
+            bits[array_i * (int)height + array_j] = mandelbrot_in_set_color(spectrum, r, i);
+            r += real_range / width;
         }
-        i += imag_range / imag_len;
+        i += imag_range / height;
     }
-    return array;
 }
 
 void mandelbrot_print(void)
