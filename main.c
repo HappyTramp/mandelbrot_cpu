@@ -4,9 +4,8 @@
 #include <string.h>
 #include "header.h"
 
-#define CHAR_SIZE sizeof(char)
-#define DEFAULT_WINDOW_W 200
-#define DEFAULT_WINDOW_H 200
+#define DEFAULT_WINDOW_W 300
+#define DEFAULT_WINDOW_H 300
 #define DEFAULT_CENTER_X 0.0
 #define DEFAULT_CENTER_Y 0.0
 #define DEFAULT_REAL_RANGE 4.0
@@ -41,20 +40,17 @@ int main(int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case 's':
-                config.window_w = atoi(optarg);
-                config.window_h = atoi(strstr(optarg, ",") + CHAR_SIZE);
+                sscanf(optarg, "%d,%d", &config.window_w, &config.window_h);
                 break;
             case 'r':
-                config.real_range = atof(optarg);
-                config.imag_range = atof(strstr(optarg, ",") + CHAR_SIZE);
+                sscanf(optarg, "%lf,%lf", &config.real_range, &config.imag_range);
                 break;
             case 'c':
-                config.center_x = atof(optarg);
-                config.center_y = atof(strstr(optarg, ",") + CHAR_SIZE);
+                sscanf(optarg, "%lf,%lf", &config.center_x, &config.center_y);
                 break;
             case '?':
             default:
-                fprintf(stderr, "Usage %s [pwh]", argv[0]);
+                fprintf(stderr, "Try: %s -h for more information", argv[0]);
                 exit(EXIT_FAILURE);
         }
 

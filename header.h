@@ -4,11 +4,14 @@
 # include <stdbool.h>
 # include <SDL2/SDL.h>
 
-# define MAX_ITERATION 200
+# define MAX_ITERATION 210
 # define ESCAPE_RADIUS 2
 # define ESCAPE_RADIUS_SQUARED (ESCAPE_RADIUS * ESCAPE_RADIUS)
 
-typedef unsigned char Byte;
+# define PIXELS_CHANELS 3
+# define PIXELS_DEPTH (PIXELS_CHANELS * 8)
+
+typedef uint8_t Byte;
 typedef int ColorHexcode;
 
 typedef union
@@ -41,6 +44,8 @@ typedef struct
     Color *palette;
     Color in_set_color;
     bool moving;
+    bool changed;
+    SDL_Texture *canvas;
 } GState;
 
 typedef struct
@@ -53,19 +58,29 @@ typedef struct
     double center_y;
 } Config;
 
+typedef struct
+{
+    double real_lo;
+    double real_hi;
+    int width;
+    double imag;
+    Color *palette;
+    uint8_t *row;
+} ThreadArgs;
+
 // mandelbrot.c
 int mandelbrot_in_set(double a, double b);
 void mandelbrot_print(void);
-int *mandelbrot_array(Point center, double real_range, double imag_range,
-                      double real_len, double imag_len);
+void *mandelbrot_pixels(double real_lo, double real_hi, double imag_lo,
+                       double imag_hi, int width, int height, Color *palette);
 
 // graphics.c
 GState *graphics_init(Config *config);
 void graphics_quit(GState *state);
 void graphics_run(GState *state);
-Color *create_palette(Color start, Color end);
 
 // helper.c
 double map_range(double x, double src_lo, double src_hi, double dest_lo, double dest_hi);
+int *inclusive_range(int start, int end);
 
 #endif

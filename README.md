@@ -20,7 +20,7 @@ SDL2: `sudo apt install libsdl2-dev`
 - [ ] Create color spectrum.
 - [ ] Smooth shading for out of set iteration colors.
 - [ ] Draw to bmp image.
-- [ ] Create pixel array and update the render line by line.
+- [x] Create pixel array and update the render line by line.
 - [ ] Display coordinates and other useful info.
-- [ ] Computation done in parallel.
-- [ ] Command line options
+- [x] Computation done in parallel.
+- [x] Command line options

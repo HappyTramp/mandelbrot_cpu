@@ -1,7 +1,7 @@
 NAME = mandel
 CC = gcc
 CCFLAGS = -Wall -Wextra
-LDFLAGS = $(shell sdl2-config --libs --cflags)
+LDFLAGS = -lpthread $(shell sdl2-config --libs --cflags)
 
 HEADER = header.h
 SRC = main.c graphics.c mandelbrot.c helper.c
@@ -19,7 +19,7 @@ $(NAME): $(OBJ)
 	$(CC) $(LDFLAGS) $(CCFLAGS) -c -o $@ $<
 
 .PHONY: debug
-debug: CCFLAGS += -g
+debug: CCFLAGS += -g -fsanitize=address
 debug: re
 
 .PHONY: clean

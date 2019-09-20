@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <math.h>
+#include <pthread.h>
 #include "header.h"
 
 #define PRINT_REAL_LO -2.0
@@ -13,13 +13,16 @@
 #define IN_CHAR '*'
 #define OUT_CHAR ' '
 
+static void *pixel_row(void *args);
+
 int mandelbrot_in_set(double ca, double cb)
 {
     double zr = ca;
     double zi = cb;
     double zr_square;
     double zi_square;
-    for (int n = 0; n < MAX_ITERATION; n++)
+    int n;
+    for (n = 0; n < MAX_ITERATION; n++)
     {
         zi_square = zi * zi;
         zr_square = zr * zr;
@@ -31,43 +34,50 @@ int mandelbrot_in_set(double ca, double cb)
         zi += cb;
         zr += ca;
     }
-    return -1;
+    return n;
 }
 
-ColorHexcode mandelbrot_in_set_color(Color *spectrum, double a, double b)
+void *mandelbrot_pixels(double real_lo, double real_hi, double imag_lo,
+                        double imag_hi, int width, int height, Color *palette)
 {
-    int steps = mandelbrot_in_set(a, b);
-    int brightness = (255 / MAX_ITERATION) * steps;
-    Color color;
-    color.rgb.r = brightness;
-    color.rgb.g = brightness;
-    color.rgb.b = brightness;
-    return color.hexcode;
-}
-
-uint8_t *mandelbrot_create_bits(int width, int height)
-{
-    uint8_t *bits = (uint8_t*)malloc(3 * width * height);
-    if (bits == NULL)
+    Byte *pixels = (Byte*)malloc(width * height * PIXELS_CHANELS);
+    if (pixels == NULL)
         return NULL;
-    return bits;
+    pthread_t *threads = (pthread_t*)malloc(sizeof(pthread_t) * height);
+    if (threads == NULL)
+        return NULL;
+    for (int y = 0; y < height; y++)
+    {
+        ThreadArgs *args = (ThreadArgs*)malloc(sizeof(ThreadArgs));
+        if (args == NULL)
+            return NULL;
+        args->real_lo = real_lo;
+        args->real_hi = real_hi;
+        args->width = width;
+        args->imag = map_range((double)y, 0, height, imag_lo, imag_hi);
+        args->palette = palette;
+        args->row = pixels + PIXELS_CHANELS * width * y;
+        pthread_create(&threads[y], NULL, pixel_row, args);
+    }
+    for (int y = 0; y < height; y++)
+        pthread_join(threads[y], NULL);
+    free(threads);
+    return (void*)pixels;
 }
 
-void mandelbrot_set_bits(uint8_t *bits, Color *spectrum, Point center, double real_range,
-                         double imag_range, int width, int height)
+static void *pixel_row(void *void_args)
 {
-    double i = center.y - imag_range / 2;
-    double r = center.x - real_range / 2;
-
-    for (int array_i = 0; array_i < height;  array_i++)
+    ThreadArgs *args = (ThreadArgs*)void_args;
+    for (int x = 0; x < args->width; x++)
     {
-        for (int array_j = 0; array_j < width; array_j++)
-        {
-            bits[array_i * (int)height + array_j] = mandelbrot_in_set_color(spectrum, r, i);
-            r += real_range / width;
-        }
-        i += imag_range / height;
+        double a = map_range((double)x, 0, args->width, args->real_lo, args->real_hi);
+        Color color = args->palette[mandelbrot_in_set(a, args->imag)];
+        args->row[x * PIXELS_CHANELS] = color.rgb.r;
+        args->row[x * PIXELS_CHANELS + 1] = color.rgb.g;
+        args->row[x * PIXELS_CHANELS + 2] = color.rgb.b;
     }
+    free(args);
+    return NULL;
 }
 
 void mandelbrot_print(void)

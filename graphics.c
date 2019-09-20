@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <pthread.h>
 #include <SDL2/SDL.h>
 #include "header.h"
 
@@ -19,9 +20,14 @@
 #define SET_DRAW_COLOR(renderer, c) ( \
         SDL_SetRenderDrawColor(renderer, c.rgb.r, c.rgb.g, c.rgb.b, SDL_ALPHA_OPAQUE));
 
+#define RED_MASK   0x0000ff
+#define GREEN_MASK 0x00ff00
+#define BLUE_MASK  0xff0000
+#define PITCH(ch, width) (ch * width)
+
 static void update(GState *state);
 static void event_handler(GState *state);
-/* static Color *create_palette(Color start, Color end); */
+static Color *create_palette(Color start, Color end);
 /* static void move_center(GState *state, int motion_x, int motion_y); */
 static void recenter(GState *state, int x, int y);
 static void recenter_x(GState *state, int x);
@@ -53,6 +59,12 @@ GState *graphics_init(Config *config)
     state->palette = create_palette(start, end);
     if (state->palette == NULL)
         error_exit_state(state, "unable to create color palette");
+    state->canvas = SDL_CreateTexture(
+        state->renderer, SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET, config->window_w, config->window_h
+    );
+    if (state->canvas == NULL)
+        error_exit_state(state, "unable to create canvas texture");
     state->running = true;
     state->window_w = config->window_w;
     state->window_h = config->window_h;
@@ -62,6 +74,7 @@ GState *graphics_init(Config *config)
     state->center.y = config->center_y;
     state->in_set_color.hexcode = IN_SET_COLOR;
     state->moving = false;
+    state->changed = true;
     return state;
 }
 
@@ -76,35 +89,52 @@ void graphics_run(GState *state)
     while (state->running)
     {
         event_handler(state);
-        update(state);
+        if (state->changed)
+        {
+            update(state);
+            state->changed = false;
+        }
         SDL_Delay(REFRESH_RATE);
     }
 }
 
 static void update(GState *state)
 {
-    double a, b;
-    Color color;
-    SET_DRAW_COLOR(state->renderer, state->in_set_color);
-    SDL_RenderClear(state->renderer);
-    for (int x = 0; x < state->window_w; x++)
+    void *pixels = mandelbrot_pixels(REAL_LO(state), REAL_HI(state),
+                                     IMAG_LO(state), IMAG_HI(state),
+                                     state->window_w, state->window_h, state->palette);
+    if (pixels == NULL)
+        error_exit_state(state, "unable to create pixels");
+    SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(
+        pixels, state->window_w, state->window_h,
+        PIXELS_DEPTH, PITCH(PIXELS_CHANELS, state->window_w),
+        RED_MASK, BLUE_MASK, GREEN_MASK, 0
+    );
+    if (surface == NULL)
     {
-        for (int y = 0; y < state->window_h; y++)
-        {
-            a = map_range((double)x, 0, state->window_w, REAL_LO(state), REAL_HI(state));
-            b = map_range((double)y, 0, state->window_h, IMAG_LO(state), IMAG_HI(state));
-            int frac_steps = mandelbrot_in_set(a, b);
-            if (frac_steps == -1)
-                continue;
-            color =  state->palette[frac_steps];
-            /* color.rgb.r = 100 * frac_steps; */
-            /* color.rgb.g = 100 * frac_steps; */
-            /* color.rgb.b = 100 * frac_steps; */
-            SET_DRAW_COLOR(state->renderer, color);
-            SDL_RenderDrawPoint(state->renderer, x, y);
-        }
+        free(pixels);
+        error_exit_state(state, "unable to create pixels surface");
+    }
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(state->renderer, surface);
+    free(pixels);
+    SDL_FreeSurface(surface);
+    if (texture == NULL)
+        error_exit_state(state, "unable to create texture");
+    SDL_Rect frame;
+    if (SDL_QueryTexture(texture, NULL, NULL, &frame.w, &frame.h) != 0)
+    {
+        SDL_DestroyTexture(texture);
+        error_exit_state(state, "unable to load texture");
+    }
+    frame.x = 0;
+    frame.y = 0;
+    if (SDL_RenderCopy(state->renderer, texture, NULL, &frame) != 0)
+    {
+        SDL_DestroyTexture(texture);
+        error_exit_state(state, "unable to render texture");
     }
     SDL_RenderPresent(state->renderer);
+    SDL_DestroyTexture(texture);
 }
 
 static void event_handler(GState *state)
@@ -177,16 +207,17 @@ static void event_handler(GState *state)
             /*         printf("%f, %f\n", state->center.x, state->center.y); */
             /*     } */
         }
+        state->changed = true;
     }
 }
 
- Color *create_palette(Color start, Color end)
+ static Color *create_palette(Color start, Color end)
 {
     int red_step = abs(end.rgb.r - start.rgb.r) / MAX_ITERATION;
     int green_step = abs(end.rgb.g - start.rgb.g) / MAX_ITERATION;
     int blue_step = abs(end.rgb.b - start.rgb.b) / MAX_ITERATION;
 
-    Color *palette = (Color*)malloc(sizeof(Color) * MAX_ITERATION);
+    Color *palette = (Color*)malloc(sizeof(Color) * (MAX_ITERATION + 1));
     if (palette == NULL)
         return NULL;
     for (int i = 0; i < MAX_ITERATION; i++)
@@ -195,6 +226,7 @@ static void event_handler(GState *state)
         palette[i].rgb.g = i * green_step + start.rgb.g;
         palette[i].rgb.b = i * blue_step + start.rgb.b;
     }
+    palette[MAX_ITERATION].hexcode = 0x0;
     return palette;
 }
 
@@ -246,6 +278,7 @@ static void destroy_state(GState *state)
     if (state == NULL)
         return;
     free(state->palette);
+    SDL_DestroyTexture(state->canvas);
     SDL_DestroyRenderer(state->renderer);
     SDL_DestroyWindow(state->window);
     free(state);
