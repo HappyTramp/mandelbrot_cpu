@@ -4,8 +4,8 @@
 # include <stdbool.h>
 # include <SDL2/SDL.h>
 
-# define MAX_ITERATION 210
-# define ESCAPE_RADIUS 2
+# define MAX_ITERATION 200
+# define ESCAPE_RADIUS 10
 # define ESCAPE_RADIUS_SQUARED (ESCAPE_RADIUS * ESCAPE_RADIUS)
 
 # define PIXELS_CHANELS 3
@@ -62,6 +62,7 @@ typedef struct
 {
     double real_lo;
     double real_hi;
+    double imag_step;
     int width;
     double imag;
     Color *palette;
@@ -81,6 +82,7 @@ void graphics_run(GState *state);
 
 // helper.c
 double map_range(double x, double src_lo, double src_hi, double dest_lo, double dest_hi);
-int *inclusive_range(int start, int end);
+Color helper_HSL_to_RGB(int hue, double saturation, double lightness);
+double double_rand(void);
 
 #endif

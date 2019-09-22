@@ -17,6 +17,8 @@
 #define IN_SET_COLOR 0x050505
 #define PALETTE_START 0x000022
 #define PALETTE_END 0xd62f2f
+/* #define PALETTE_START 0x000000 */
+/* #define PALETTE_END 0xffffff */
 #define SET_DRAW_COLOR(renderer, c) ( \
         SDL_SetRenderDrawColor(renderer, c.rgb.r, c.rgb.g, c.rgb.b, SDL_ALPHA_OPAQUE));
 
@@ -185,7 +187,7 @@ static void event_handler(GState *state)
                     zoom_out(state, ZOOM_RATIO);
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                    printf("> %d, %d\n", e.button.x, e.button.y);
+                    /* printf("> %d, %d\n", e.button.x, e.button.y); */
                 if (e.button.button == SDL_BUTTON_RIGHT)
                     recenter(state, e.button.x, e.button.y);
             // TODO
@@ -222,6 +224,8 @@ static void event_handler(GState *state)
         return NULL;
     for (int i = 0; i < MAX_ITERATION; i++)
     {
+        /* palette[i] = helper_HSL_to_RGB(i, 0.6, 1.0); */
+        /* printf("%x\n", palette[i].hexcode); */
         palette[i].rgb.r = i * red_step + start.rgb.r;
         palette[i].rgb.g = i * green_step + start.rgb.g;
         palette[i].rgb.b = i * blue_step + start.rgb.b;

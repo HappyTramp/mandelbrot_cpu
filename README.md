@@ -17,10 +17,13 @@ SDL2: `sudo apt install libsdl2-dev`
 
 ## TODO
 
-- [ ] Create color spectrum.
+- [ ] Color gradient with control points and cubic iterpolation
+      like <https://stackoverflow.com/a/25816111>
 - [ ] Smooth shading for out of set iteration colors.
 - [ ] Draw to bmp image.
 - [x] Create pixel array and update the render line by line.
 - [ ] Display coordinates and other useful info.
 - [x] Computation done in parallel.
 - [x] Command line options
+- [x] Anti-aliasing with supersampling
+- [ ] Other (not random?) supersampling algorithm
