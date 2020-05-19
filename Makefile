@@ -1,34 +1,40 @@
-NAME = mandel
-CC = gcc
-CCFLAGS = -Wall -Wextra
-LDFLAGS = -lm -lpthread $(shell sdl2-config --libs --cflags)
-
-HEADER = header.h
-SRC = main.c graphics.c mandelbrot.c helper.c
-OBJ = $(SRC:.c=.o)
-
 RM = rm -f
 
-.PHONY: all
-all: $(NAME)
+NAME = mandel
+
+SRC_DIR = src
+INC_DIR = inc
+OBJ_DIR = obj
+
+CC = gcc
+OFLAG = -O0
+CCFLAGS = -I$(INC_DIR) -Wall -Wextra $(OFLAG)
+LDFLAGS = -lm -lpthread $(shell sdl2-config --libs --cflags)
+
+INC = $(shell find $(INC_DIR) -type f -name '*.h')
+SRC = $(shell find $(SRC_DIR) -type f -name '*.c')
+OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+all: prebuild $(NAME)
+
+prebuild:
+	mkdir -p $(OBJ_DIR)
 
 $(NAME): $(OBJ)
-	$(CC) $(LDFLAGS) $(CCFLAGS) -o $@ $(OBJ)
+	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
-%.o: %.c $(HEADER)
-	$(CC) $(LDFLAGS) $(CCFLAGS) -c -o $@ $<
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER)
+	$(CC) $(CCFLAGS) -c -o $@ $<
 
-.PHONY: debug
-debug: CCFLAGS += -g -fsanitize=address
-debug: re
+debug: OFLAG = -g
+debug: all
 
-.PHONY: clean
 clean:
 	$(RM) $(OBJ)
 
-.PHONY: fclean
 fclean: clean
 	$(RM) $(NAME)
 
-.PHONY: re
 re: fclean all
+
+.PHONY: all debug clean fclean re
