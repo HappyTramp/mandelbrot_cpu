@@ -7,7 +7,7 @@ INC_DIR = inc
 OBJ_DIR = obj
 
 CC = gcc
-OFLAG = -O0
+OFLAG = -Ofast -funroll-loops -ffast-math
 CCFLAGS = -I$(INC_DIR) -Wall -Wextra $(OFLAG)
 LDFLAGS = -lm -lpthread $(shell sdl2-config --libs --cflags)
 
