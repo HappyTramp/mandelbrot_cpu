@@ -9,7 +9,8 @@ OBJ_DIR = obj
 CC = gcc
 OFLAG = -Ofast -funroll-loops -ffast-math
 CCFLAGS = -I$(INC_DIR) -Wall -Wextra $(OFLAG)
-LDFLAGS = -lm -lpthread $(shell sdl2-config --libs --cflags)
+LDFLAGS = -lm -lpthread \
+		  $(shell pkg-config --libs --cflags sdl2 SDL2_ttf)
 
 INC = $(shell find $(INC_DIR) -type f -name '*.h')
 SRC = $(shell find $(SRC_DIR) -type f -name '*.c')
@@ -23,7 +24,7 @@ prebuild:
 $(NAME): $(OBJ)
 	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC)
 	$(CC) $(CCFLAGS) -c -o $@ $<
 
 debug: OFLAG = -g

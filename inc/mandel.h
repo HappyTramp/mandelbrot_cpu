@@ -6,12 +6,15 @@
 # include <math.h>
 # include <immintrin.h>
 # include <SDL2/SDL.h>
+# include <SDL2/SDL_ttf.h>
 
-#define SDL_CALL(x) do {                     \
+# define SDL_CALL(x) do {                    \
 	SDL_ClearError();                        \
 	x;                                       \
 	error_check_sdl(#x, __FILE__, __LINE__); \
 } while (0)
+
+# define TTF_CALL SDL_CALL
 
 enum
 {
@@ -56,8 +59,16 @@ typedef struct
     SDL_Window		*window;
     SDL_Renderer	*renderer;
     bool			running;
-	SDL_Texture		*texture;
+
+	TTF_Font		*font;
+	SDL_Texture		*texture_center;
+	SDL_Texture		*texture_iterations;
+	SDL_Texture		*texture_time;
+	bool			info;
+
     Color			*palette;
+	SDL_Texture		*texture;
+
 	double			real_start;
 	double			real_end;
 	double			imag_start;
@@ -81,5 +92,16 @@ void				error_check_sdl(const char *code, const char *filename, int line_num);
 
 // color.c
 Color				*color_palette_new(Color *palette, int iterations);
+
+// text.c
+# define TEXT_TEXTURE_UPDATE(state, texture, fmt, ...) do {  \
+	if (state->info) {                                       \
+		SDL_DestroyTexture(texture);                         \
+		texture = text_texture_new(state, fmt, __VA_ARGS__); \
+	}                                                        \
+} while(0)
+
+SDL_Texture			*text_texture_new(State *state, const char *fmt, ...);
+void				text_render(State *state, SDL_Texture *texture, int x, int y, int w, int h);
 
 #endif

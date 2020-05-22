@@ -33,7 +33,10 @@ void 		event_handle(State *state)
                 break;
 
             case SDL_KEYDOWN:
-				st_set_key(e.key.keysym.sym, true);
+				if (e.key.keysym.sym == SDLK_i)
+					state->info = !state->info;
+				else
+					st_set_key(e.key.keysym.sym, true);
                 break;
 
             case SDL_KEYUP:
@@ -112,27 +115,51 @@ static void	st_set_key(SDL_Keycode sym, bool value)
 	}
 }
 
-#define MANDEL_ITERATIONS_DELTA 2
+#define MANDEL_ITERATIONS_DELTA 1
+
+#define EVENT_TEXTURE_CENTER_UPDATE(state) \
+	TEXT_TEXTURE_UPDATE(state, state->texture_center, "center: %.3ei + %.3e", \
+			state->imag_start + (state->imag_end - state->imag_start) / 2.0, \
+			state->real_start + (state->real_end - state->real_start) / 2.0)
+
 
 static void	st_apply_keys(State *state)
 {
 	if (g_key_states[KEY_INC_ITERATIONS])
+	{
 		state->iterations += MANDEL_ITERATIONS_DELTA;
+		state->palette = color_palette_new(state->palette, state->iterations);
+		TEXT_TEXTURE_UPDATE(state, state->texture_iterations, "iterations: %d", state->iterations);
+	}
 	if (g_key_states[KEY_DEC_ITERATIONS])
 	{
 		state->iterations -= MANDEL_ITERATIONS_DELTA;
 		if (state->iterations <= 0)
 			state->iterations = 1;
+		state->palette = color_palette_new(state->palette, state->iterations);
+		TEXT_TEXTURE_UPDATE(state, state->texture_iterations, "iterations: %d", state->iterations);
 	}
 
 	if (g_key_states[KEY_UP])
+	{
 		st_move_vertical(state, false);
+		EVENT_TEXTURE_CENTER_UPDATE(state);
+	}
 	if (g_key_states[KEY_DOWN])
+	{
 		st_move_vertical(state, true);
+		EVENT_TEXTURE_CENTER_UPDATE(state);
+	}
 	if (g_key_states[KEY_LEFT])
+	{
 		st_move_horizontal(state, false);
+		EVENT_TEXTURE_CENTER_UPDATE(state);
+	}
 	if (g_key_states[KEY_RIGHT])
+	{
 		st_move_horizontal(state, true);
+		EVENT_TEXTURE_CENTER_UPDATE(state);
+	}
 
 	if (g_key_states[KEY_ZOOM_IN])
 		st_zoom(state, true);
