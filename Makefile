@@ -8,7 +8,7 @@ OBJ_DIR = obj
 
 CC = gcc
 OFLAG = -Ofast -funroll-loops -ffast-math
-CCFLAGS = -I$(INC_DIR) -Wall -Wextra $(OFLAG)
+CCFLAGS = -I$(INC_DIR) -Wall -Wextra $(OFLAG) -mavx
 LDFLAGS = -lm -lpthread \
 		  $(shell pkg-config --libs --cflags sdl2 SDL2_ttf)
 

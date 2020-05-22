@@ -47,36 +47,16 @@ void	state_run(State *state)
     {
         event_handle(state);
 
-		double	real_step;
-		double	imag_step;
-		double	real;
-		double	imag;
+		int		_;
 		void	*pixels;
-		int		pitch;
 		int		width;
 		int		height;
 
-		SDL_CALL(SDL_LockTexture(state->texture, NULL, &pixels, &pitch));
+		SDL_CALL(SDL_LockTexture(state->texture, NULL, &pixels, &_));
 		SDL_CALL(SDL_QueryTexture(state->texture, NULL, NULL, &width, &height));
 
-		real_step = (state->real_end - state->real_start) / width;
-		imag_step = (state->imag_end - state->imag_start) / height;
-		imag = state->imag_start;
-
 		uint32_t render_start_time = SDL_GetTicks();
-
-		for (int i = 0; i < height; i++)
-		{
-			real = state->real_start;
-			for (int j = 0; j < width; j++)
-			{
-				int n = mandelbrot(real, imag, state->iterations);
-				((Color*)pixels)[i * width + j] = state->palette[n];
-				real += real_step;
-			}
-			imag += imag_step;
-		}
-
+		mandelbrot_avx(state, pixels, width, height);
 		uint32_t render_end_time = SDL_GetTicks();
 
 		SDL_UnlockTexture(state->texture);

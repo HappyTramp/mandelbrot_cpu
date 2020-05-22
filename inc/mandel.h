@@ -1,6 +1,10 @@
 #ifndef MANDEL_H
 # define MANDEL_H
 
+# ifndef __AVX__
+#  error "AVX not supported"
+# endif
+
 # include <stdlib.h>
 # include <stdbool.h>
 # include <math.h>
@@ -78,6 +82,7 @@ typedef struct
 
 // mandelbrot.c
 int					mandelbrot(double ca, double cb, int iterations);
+void				mandelbrot_avx(State *state, Color *pixels, int width, int height);
 
 // state.c
 bool				state_init(State *state);
